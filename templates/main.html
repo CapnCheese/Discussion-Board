@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>peak</title>
+</head>
+<body>
+
+    <h1>peak</h1>
+
+    <!-- information dropdown -->
+    <div style="position: absolute; top: 20px; right: 20px; z-index: 10;">
+        <button id="openInfo" onclick="info('open')">Info</button>
+
+        
+        <div id="infoText" style="display: none; flex-direction: column; align-items: flex-end;">
+            <div style="margin-bottom: 10px; width: 20vw; border-radius: 16px; border: 4px solid rgb(200,200,200); background: #a3a3a3; padding: 10px;">
+                <p>Lock in.</p>
+            </div>
+            <button onclick="info('close')">Close</button>
+        </div>
+    </div>
+
+    <!-- where user messages are stored -->
+    <div id="history_panel" style="width: 500px; height: 200px;"></div>
+
+    <!-- user input field -->
+    <form id="inputForm">
+        <textarea id="userInput" placeholder="send a message"></textarea>
+    </form>
+
+
+    <button id="enterButton" onclick="enterMessage()">Send</button>
+
+
+
+
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script>
+        window.onload = async () => {
+            const get_data = await fetch("/get_data");
+            const data = await get_data.json();
+            if (data.length > 0) {
+                data.forEach(msg => updateHistory(msg.user, msg.message));
+            }
+            
+
+
+            // handle enter key input
+            document.getElementById("userInput").addEventListener("keydown", function(event){
+                if (event.code === "Enter" && event.shiftKey) {
+                    return;
+                }
+                else if (event.code === "Enter") {
+                    event.preventDefault();
+                    enterMessage();
+                }
+            });
+        };
+
+        function updateHistory(role, content) {
+            const log = document.getElementById("history_panel");
+
+            //create div for storing user messages
+            const div = document.createElement("div");
+
+            div.className = role == "user" ? "msg-user" : "msg-other";
+            div.innerHTML = (role == "user" ? "<b>You:</b><br>" : "<b>Other:</b><br>") + marked.parse(content);
+
+            log.appendChild(div);
+        }
+        
+        async function enterMessage() {
+            const message = document.getElementById("userInput").value;
+            const log = document.getElementById("history_panel");
+            
+            //prevent sending empty messages
+            if (message === "") {
+                return;
+            }
+            
+            //clear input box
+            document.getElementById("inputForm").reset();
+
+            updateHistory("user", message);
+
+            log.scrollTo({
+                top: log.scrollHeight,
+                behavior: "smooth"
+            });
+
+            const sentMesage = await fetch("/main", {
+                method: "POST",
+                headers: {"Content-Type": "application/json"},
+                body: JSON.stringify({message: message, user: "test"})
+            });
+        }
+        
+        function info(action) {
+            const openButton = document.getElementById("openInfo");
+            const infoText = document.getElementById("infoText");
+
+            if (action == "open") {
+                openButton.style.display = "none";
+                infoText.style.display = "flex";
+            }
+
+            if (action == "close") {
+                openButton.style.display = "";
+                infoText.style.display = "none";
+            }
+        }
+    </script>
+</body>
+</html>
