@@ -14,37 +14,53 @@
 
         
         <div id="infoText" style="display: none; flex-direction: column; align-items: flex-end;">
-            <div style="margin-bottom: 10px; width: 20vw; border-radius: 16px; border: 4px solid rgb(200,200,200); background: #a3a3a3; padding: 10px;">
+            <div style="margin-bottom: 10px; width: 20vw; border-radius: 16px; border: 2px solid rgb(0,0,0); background: rgb(200, 200, 200); padding: 10px;">
                 <p>Lock in.</p>
             </div>
             <button onclick="info('close')">Close</button>
         </div>
     </div>
 
-    <!-- where user messages are stored -->
-    <div id="history_panel" style="width: 500px; height: 200px;"></div>
-
-    <!-- user input field -->
-    <form id="inputForm">
-        <textarea id="userInput" placeholder="send a message"></textarea>
-    </form>
 
 
-    <button id="enterButton" onclick="enterMessage()">Send</button>
+
+    <!-- centering container -->
+    <div style="display: flex; flex-direction: column; width: 90vw; align-items: center;">
+
+        <!-- where user messages are stored -->
+        <div id="history_panel" style="display: flex; flex-direction: column; width: 500px; height: 500px; overflow-y: auto"></div>
+
+        <!-- user input field -->
+        <form id="inputForm" style="margin-top: 10px;">
+
+                <textarea id="userInput" placeholder="send a message" style="
+                    outline: none; padding: 10px; width: 300px; min-height: 50px;
+                    border-radius: 16px; background: rgb(220, 220, 220);
+                    margin-right: -20px; margin-bottom: -30px; padding-right: 80px;
+                    resize: none;"></textarea>
+
+                <button id="enterButton" onclick="enterMessage()" style="
+                    outline: none; width: 50px; height: 50px; margin-left: -44px;
+                    padding: 10px; border-radius: 16px; font-size: 20px;
+                    background: rgb(220, 220, 220);">↑</button>
+        </form>
+    </div>
 
 
 
 
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script>
+        last_name_div = null;
+        last_id = -1;
+        frame = 0;
+
         window.onload = async () => {
             const get_data = await fetch("/get_data");
             const data = await get_data.json();
             if (data.length > 0) {
-                data.forEach(msg => updateHistory(msg.user, msg.message));
+                data.forEach(msg => updateHistory(msg.id, msg.user, msg.message));
             }
-            
-
 
             // handle enter key input
             document.getElementById("userInput").addEventListener("keydown", function(event){
@@ -58,16 +74,54 @@
             });
         };
 
-        function updateHistory(role, content) {
+        async function update() {
+            frame += 1;
+            console.log(last_id)
+            if ((frame % 100) == 0)
+            {
+                const get_data = await fetch("/get_data");
+                const data = await get_data.json();
+                if (data.length > 0) {
+                    data.forEach(msg => updateHistory(msg.id, msg.user, msg.message));
+                }
+            }
+
+            requestAnimationFrame(update);
+        }
+
+        requestAnimationFrame(update);
+
+        function updateHistory(id, role, content) {
             const log = document.getElementById("history_panel");
 
+
+            if (last_id >= id)
+            {
+                console.log("avoiding repeat")
+                return;
+            }
+            
+            console.log("continuing")
+
             //create div for storing user messages
-            const div = document.createElement("div");
+            current_name = role == "user" ? "<b>You</b><br>" : "<b>Other</b><br>";
 
-            div.className = role == "user" ? "msg-user" : "msg-other";
-            div.innerHTML = (role == "user" ? "<b>You:</b><br>" : "<b>Other:</b><br>") + marked.parse(content);
+            if(last_name_div == null || last_name_div.innerHTML != current_name)
+            {
+                const name_div = document.createElement("div");
+                name_div.className = role == "user" ? "name-user" : "name-other";
+                name_div.innerHTML = current_name;
 
-            log.appendChild(div);
+                last_name_div = name_div;
+                log.appendChild(name_div);
+            }
+
+            const text_div = document.createElement("div");
+            text_div.className = role == "user" ? "msg-user" : "msg-other";
+            text_div.innerHTML = marked.parse(content);
+
+            last_id = id;
+            log.appendChild(text_div);
         }
         
         async function enterMessage() {
@@ -82,7 +136,7 @@
             //clear input box
             document.getElementById("inputForm").reset();
 
-            updateHistory("user", message);
+            updateHistory(last_id+1, "user", message);
 
             log.scrollTo({
                 top: log.scrollHeight,
@@ -111,5 +165,38 @@
             }
         }
     </script>
+
+    <style>
+        .msg-user{
+            margin-top: 5px;
+            color: white;
+            padding: 0.5px 10px;
+            width: fit-content;
+            border-radius: 20px;
+            background: rgb(0, 68, 221);
+            align-self: flex-end;
+        }
+        .msg-other{
+            margin-top: 5px;
+            padding: 0.5px 10px;
+            width: fit-content;
+            border-radius: 20px;
+            background: rgb(220, 220, 220);
+            align-self: flex-start;
+        }
+        
+        
+        /* for displaying user name, outside of text bubble */
+        .name-user{
+            margin-top: 10px;
+            width: fit-content;
+            align-self: flex-end;
+        }
+        .name-other{
+            margin-top: 10px;
+            width: fit-content;
+            align-self: flex-start;
+        }
+    </style>
 </body>
 </html>
