@@ -1,6 +1,6 @@
 import os
 
-from flask import Flask, jsonify, render_template, request
+from flask import Flask, jsonify, render_template, request, session
 
 app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY")
@@ -29,10 +29,17 @@ def main():
     print(history)
     print(f"id: {message_id}")
     message_id += 1
+
+    #session["user_message_ids"].append(message_id)
     return jsonify(success=True)
 
 @app.route("/get_data", methods=["POST", "GET"])
 def get_data():
+    #user_message_ids = session.get("user_message_ids")
+
+
+    #for message in history:
+    #    if message["id"]
     return jsonify(history)
 
 

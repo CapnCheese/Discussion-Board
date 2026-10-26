@@ -2,11 +2,16 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>peak</title>
+    <!-- "Plus Jakarta Sans" font from Google Fonts --->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 </head>
 <body>
 
-    <h1>peak</h1>
+    <h2 style="color: white; margin-left: 20px; text-align: center;"><i>development build - expect changes!</i></h2>
 
     <!-- information dropdown -->
     <div style="position: absolute; top: 20px; right: 20px; z-index: 10;">
@@ -15,39 +20,37 @@
         
         <div id="infoText" style="display: none; flex-direction: column; align-items: flex-end;">
             <div style="margin-bottom: 10px; width: 20vw; border-radius: 16px; border: 2px solid rgb(0,0,0); background: rgb(200, 200, 200); padding: 10px;">
-                <p>Lock in.</p>
+                <p>Made by Alex & Anthony</p>
+                <p>Contact about bugs and suggestions</p>
             </div>
             <button onclick="info('close')">Close</button>
         </div>
     </div>
 
-
-
-
     <!-- centering container -->
-    <div style="display: flex; flex-direction: column; width: 90vw; align-items: center;">
+    <div style="display: flex; flex-direction: column; width: 100vw; align-items: center;">
 
         <!-- where user messages are stored -->
-        <div id="history_panel" style="display: flex; flex-direction: column; width: 500px; height: 500px; overflow-y: auto"></div>
+        <div id="message_panel" style="display: flex;
+        flex-direction: column; width: 500px; height: 500px;
+        overflow-y: auto; background: rgb(50, 50, 50);
+        border-radius: 10px; padding: 10px;"></div>
 
         <!-- user input field -->
         <form id="inputForm" style="margin-top: 10px;">
 
                 <textarea id="userInput" placeholder="send a message" style="
                     outline: none; padding: 10px; width: 300px; min-height: 50px;
-                    border-radius: 16px; background: rgb(220, 220, 220);
+                    border-radius: 16px; background: rgb(50, 50, 50);
                     margin-right: -20px; margin-bottom: -30px; padding-right: 80px;
                     resize: none;"></textarea>
 
                 <button id="enterButton" onclick="enterMessage()" style="
                     outline: none; width: 50px; height: 50px; margin-left: -44px;
                     padding: 10px; border-radius: 16px; font-size: 20px;
-                    background: rgb(220, 220, 220);">↑</button>
+                    background: rgb(100, 100, 100);">↑</button>
         </form>
     </div>
-
-
-
 
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script>
@@ -56,6 +59,7 @@
         frame = 0;
 
         window.onload = async () => {
+            // load saved message history
             const get_data = await fetch("/get_data");
             const data = await get_data.json();
             if (data.length > 0) {
@@ -64,9 +68,11 @@
 
             // handle enter key input
             document.getElementById("userInput").addEventListener("keydown", function(event){
+                // allow line breaks when shift key is down
                 if (event.code === "Enter" && event.shiftKey) {
                     return;
                 }
+                // prevent line break and send a message
                 else if (event.code === "Enter") {
                     event.preventDefault();
                     enterMessage();
@@ -74,6 +80,16 @@
             });
         };
 
+        // smooth scroll to bottom of message panel
+        function scrollToBottom() {
+            const message_panel = document.getElementById("message_panel");
+            message_panel.scrollTo({
+                top: message_panel.scrollHeight,
+                behavior: "smooth"
+            });
+        }
+
+        // main update function (for checking for new messages)
         async function update() {
             frame += 1;
             console.log(last_id)
@@ -92,8 +108,7 @@
         requestAnimationFrame(update);
 
         function updateHistory(id, role, content) {
-            const log = document.getElementById("history_panel");
-
+            const log = document.getElementById("message_panel");
 
             if (last_id >= id)
             {
@@ -104,7 +119,7 @@
             console.log("continuing")
 
             //create div for storing user messages
-            current_name = role == "user" ? "<b>You</b><br>" : "<b>Other</b><br>";
+            current_name = role == "user" ? "You" : "Others";
 
             if(last_name_div == null || last_name_div.innerHTML != current_name)
             {
@@ -122,11 +137,13 @@
 
             last_id = id;
             log.appendChild(text_div);
+
+            scrollToBottom();
         }
         
         async function enterMessage() {
             const message = document.getElementById("userInput").value;
-            const log = document.getElementById("history_panel");
+            const log = document.getElementById("message_panel");
             
             //prevent sending empty messages
             if (message === "") {
@@ -148,6 +165,8 @@
                 headers: {"Content-Type": "application/json"},
                 body: JSON.stringify({message: message, user: "test"})
             });
+
+            scrollToBottom();
         }
         
         function info(action) {
@@ -167,33 +186,91 @@
     </script>
 
     <style>
+        :root {
+            --bg: #0c0d14;
+            --bg-glow-a: rgba(90, 92, 224, 0.16);
+            --bg-glow-b: rgba(56, 189, 248, 0.07);
+            --surface: #151722;
+            --surface-2: #1d2030;
+            --surface-3: #262a3d;
+            --line: #2a2e44;
+            --line-soft: #1f2236;
+            --text: #e8e9f3;
+            --text-dim: #9a9db8;
+            --text-faint: #6a6e8a;
+            --accent: #5a5ce0;
+            --accent-hi: #7b7dff;
+            --accent-lo: #4143c4;
+            --radius-lg: 22px;
+            --radius-md: 16px;
+            --font: "Plus Jakarta Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+        }
+
+        html {
+            background: var(--bg);
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background:
+                radial-gradient(900px 500px at 15% -10%, var(--bg-glow-a), transparent 60%),
+                radial-gradient(700px 420px at 100% 0%, var(--bg-glow-b), transparent 60%),
+                var(--bg);
+            padding: 28px 20px 40px;
+        }
+
+        textarea{
+            font-family: inherit !important;
+            border: none;
+            color: white;
+        }
+        textarea::placeholder{
+            color: rgb(150, 150, 150);
+        }
+
+        ::-webkit-scrollbar{
+            background-color: transparent;
+        }
+        ::-webkit-scrollbar-thumb{
+            background-color: rgba(25, 25, 25, 1);
+            border-radius: 10px;
+            border: 4px solid transparent;
+            background-clip: content-box;
+        }
+        ::-webkit-scrollbar-thumb:hover{
+            background-color: rgba(75, 75, 75, 1);
+        }
+
+        /* styling text bubbles */
         .msg-user{
             margin-top: 5px;
             color: white;
             padding: 0.5px 10px;
             width: fit-content;
-            border-radius: 20px;
+            border-radius: 10px 10px 2px 10px;
             background: rgb(0, 68, 221);
             align-self: flex-end;
+            max-width: 50%;
+            overflow-wrap: break-word;
         }
         .msg-other{
             margin-top: 5px;
             padding: 0.5px 10px;
             width: fit-content;
-            border-radius: 20px;
+            border-radius: 10px 10px 10px 2px;
             background: rgb(220, 220, 220);
             align-self: flex-start;
+            max-width: 50%;
+            overflow-wrap: break-word;
         }
-        
-        
         /* for displaying user name, outside of text bubble */
         .name-user{
-            margin-top: 10px;
+            color: rgb(150, 150, 150);
             width: fit-content;
             align-self: flex-end;
         }
         .name-other{
-            margin-top: 10px;
+            color: rgb(150, 150, 150);
             width: fit-content;
             align-self: flex-start;
         }
